@@ -1302,7 +1302,7 @@ FROM
           FROM film ) t1
 ORDER BY  filmlen_groups
 
-
+/**Projet DVD rental***/
 /*question 1*/
 
 WITH t1 AS (
@@ -1328,7 +1328,7 @@ COUNT(*) rental_count
 FROM t1
 GROUp BY 1,2
 ORDER BY 2;
-/*** avec ***/
+/*** avec les catégorie ***/
 WITH t1 AS (
             SELECT 
             f.title film_title,
@@ -1343,6 +1343,12 @@ WITH t1 AS (
             ON i.film_id = f.film_id
             JOIN rental r
             ON i.inventory_id = r.inventory_id
+			WHERE cat.name = 'Animation' 
+			OR cat.name = 'Children'
+			OR cat.name = 'Classics' 
+			OR cat.name = 'Comedy'
+			OR cat.name = 'Family'
+			OR cat.name = 'Music'
 )
 
 SELECT DISTINCT film_title,
@@ -1350,4 +1356,60 @@ category_name,
 COUNT(*) OVER(PARTITION BY film_title) AS rental_count
 FROM t1
 ORDER BY 2,1;
-/***/
+/*** Q2***/
+
+WITH t1 AS (
+            SELECT 
+            f.title film_title,
+            cat.name category_name,
+            f.rental_duration 
+            FROM category cat
+            JOIN film_category f_cat
+            ON f_cat.category_id = cat.category_id
+            JOIN film f
+            ON f_cat.film_id = f.film_id
+			WHERE cat.name = 'Animation' 
+			OR cat.name = 'Children'
+			OR cat.name = 'Classics' 
+			OR cat.name = 'Comedy'
+			OR cat.name = 'Family'
+			OR cat.name = 'Music'
+			
+)
+
+SELECT film_title,
+category_name,
+rental_duration,
+NTILE(4) OVER (ORDER BY rental_duration) AS standard_quartile
+FROM t1
+ORDER BY 3;
+
+
+/***Q3***/
+
+WITH t1 AS (
+            SELECT 
+            DISTINCT cat.name AS category_name,
+            NTILE(4) OVER (ORDER BY rental_duration) AS standard_quartile,
+			f.film_id AS film_id
+            FROM category cat
+            JOIN film_category f_cat
+            ON f_cat.category_id = cat.category_id
+            JOIN film f
+            ON f_cat.film_id = f.film_id
+			WHERE cat.name = 'Animation' 
+			OR cat.name = 'Children'
+			OR cat.name = 'Classics' 
+			OR cat.name = 'Comedy'
+			OR cat.name = 'Family'
+			OR cat.name = 'Music'
+			
+)
+
+SELECT category_name,
+standard_quartile,
+COUNT(*) 
+FROM t1 
+GROUP BY 1, 2
+ORDER BY 1, 2;
+
